@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <center>
+      <h1>
+        Codester's Teacher View
+      </h1>
+    </center>
+    <hr>
+    <center>
+      <h3>
+        <div id = "ModuleChoice" style="color:blue">
+        </div>
+      </h3>
+    </center>
+    <div id = "AverageScorePerModule">
+    </div>
+    <div id = "CompletionPerModule">
+    </div>
+    <div id = "TopErrors">
+    </div>
+    <div id = "TopStudents">
+    </div>
+    <script type="text/javascript">
+
+      $(document).ready(function(){
+
+
+        <!--Ajax call to get teacher data from the Django REST Api-->
+        $.ajax({
+            type: "GET",
+            url: "http://127.0.0.1:8000/studentwebsite/getteacherview",
+            success: function(data) {
+                  localStorage['teacherData'] = JSON.stringify(data);
+            }
+        })
+
+        <!--Using the JSON data to generate the module names-->
+        var modules = JSON.parse(localStorage['teacherData'])[0].modules;
+        $("#ModuleChoice").append("<p class = 'module1'>" + modules[0].module_name + "</p>");
+        $("#ModuleChoice").append("<p class = 'module2'>" + modules[1].module_name + "</p>");
+        $("#ModuleChoice").append("<p class = 'module3'>" + modules[2].module_name + "</p>");
+
+        <!--Generating the graphs based on the module choice-->
+        $("#ModuleChoice").on("click","p.module1", function() {
+            generateTopErrors(modules[0].errors);
+            generateTopStudents(modules[0].module_toppers);
+        });
+        $("#ModuleChoice").on("click","p.module2", function() {
+            generateTopErrors(modules[1].errors);
+            generateTopStudents(modules[1].module_toppers);
+        });
+        $("#ModuleChoice").on("click","p.module3", function() {
+            generateTopErrors(modules[2].errors);
+            generateTopStudents(modules[2].module_toppers);
+        });
+
+        <!--Code to generate the table for top errors-->
+        function generateTopErrors(errors){
+            var content = '<table style="border:1px solid black;border-collapse:collapse;height:100px;width:300px"><thead><tr></tr></thead><tbody>';
+            content += '<th style="border:1px solid black;background-color:#337AFF;color:white">Type of Error</th>';
+            content += '<th style="border:1px solid black;background-color:#337AFF;color:white">Count</th>';
+            content += '<th style="border:1px solid black;background-color:#337AFF;color:white">Students</th>';
+            for (var i = 0, len = errors.length; i < len; ++i) {
+                content += '<tr style="border:1px solid black">';
+                content += '<td style="border:1px solid black">' + errors[i].error_type + '</td>';
+                content += '<td style="border:1px solid black">' + errors[i].error_count + '</td>';
+                content += '<td style="border:1px solid black">' + errors[i].error_studentcount+ '</td>';
+                content += "</tr>";
+            }
+            content += '</tbody><tfoot><tr></tr></tfoot></table>';
+            $("#TopErrors").html(content);
+        }
+
+        <!--Code to generate table for top students-->
+        function generateTopStudents(toppers){
+          var top_students = toppers.split(",");
+          var content = '<table style="border:1px solid black;border-collapse:collapse;height:100px;width:300px"><thead><tr></tr></thead><tbody>';
+          content += '<th style="border:1px solid black;background-color:#337AFF;color:white">Top Students</th>';
+          for (var i = 0, len = top_students.length; i < len; ++i) {
+              content += '<tr style="border:1px solid black">';
+              content += '<td style="border:1px solid black">' + top_students[i].substring(2, top_students[i].length - 1) + '</td>';
+              content += "</tr>";
+          }
+          content += '</tbody><tfoot><tr></tr></tfoot></table>';
+          $("#TopStudents").html(content);
+        }
+
+
+      });
+    </script>
+  </body>
+</html>
